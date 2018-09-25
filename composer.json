@@ -1,0 +1,33 @@
+{
+    "name": "acgrid/config",
+    "description": "Configuration manager with deferred default value, transformation and caching.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "acgrid",
+            "email": "acgrid@gmail.com"
+        }
+    ],
+    "type": "library",
+    "require": {
+        "php": "^7.2",
+        "php-di/php-di": "^6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "ACGrid\\Config": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "acgrid\\ConfigTest\\": "tests/"
+        }
+    },
+    "suggest": {
+        "ext-apcu": "Cache resolved configuration in built-in PHP user cache."
+    },
+    "minimum-stability": "stable"
+}
