@@ -4,6 +4,8 @@ php:
   - 7.2
 
 before_script:
+  - pecl install apcu
+  - phpenv config-add php.ini
   - composer install --prefer-source --no-interaction
 
 after_script:
