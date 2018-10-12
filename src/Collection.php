@@ -85,30 +85,19 @@ abstract class Collection
         return $this->loader->replace(static::class, $data);
     }
 
-    /**
-     * @return array
-     */
-    public function all(): array
+    public function all($method = 'value'): array
     {
         $items = $this->items();
         return array_combine(array_map(function(Item $item){
             return $item->name();
-        }, $items), array_map(function(Item $item){
-            return $item->value();
+        }, $items), array_map(function(Item $item) use ($method){
+            return $item->$method();
         }, $items));
     }
 
-    /**
-     * @return array
-     */
     public function dump(): array
     {
-        $items = $this->items();
-        return array_combine(array_map(function(Item $item){
-            return $item->name();
-        }, $items), array_map(function(Item $item){
-            return $item->writeCurrent();
-        }, $items));
+        return $this->all('writeCurrent');
     }
 
 }

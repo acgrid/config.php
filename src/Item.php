@@ -103,7 +103,7 @@ class Item
         return $this->value();
     }
 
-    function __toString()
+    public function __toString()
     {
         return strval($this->value());
     }
