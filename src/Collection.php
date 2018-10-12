@@ -48,18 +48,13 @@ abstract class Collection
 
     public function items()
     {
-        try{
-            $reflection = new \ReflectionClass($this);
-            return array_filter(array_map(function(\ReflectionMethod $method){
-                if($method->class !== self::class){
-                    return ($item = $method->invoke($this)) instanceof Item ? $item : null;
-                }else{
-                    return null;
-                }
-            }, $reflection->getMethods(\ReflectionMethod::IS_PUBLIC)));
-        }catch (\Exception $e){
-            return [];
-        }
+        return array_filter(array_map(function(\ReflectionMethod $method){
+            if($method->class !== self::class){
+                return ($item = $method->invoke($this)) instanceof Item ? $item : null;
+            }else{
+                return null;
+            }
+        }, (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC)));
     }
 
     public function raw(string $item)
