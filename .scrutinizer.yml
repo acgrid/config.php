@@ -17,17 +17,15 @@ filter:
         - 'tests/*'
 build:
     environment:
-        php: '7.2.11'
-        ini:
-            'apc.enable_cli': 1
+        php:
+            version: '7.2.11'
+            ini:
+                'apc.enable_cli': 1
     nodes:
         analysis:
             tests:
                 override:
                 - php-scrutinizer-run
-        dependencies:
-            before:
-                - pecl install apcu
     tests:
         override:
             -
