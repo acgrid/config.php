@@ -4,25 +4,20 @@
 namespace ACGrid\Config;
 
 
-class Collection
+abstract class Collection
 {
     /**
-     * The variable (section) name in the generated configuration file
+     * @var Loader
      */
-    const VARIABLE = 'CONFIG';
-
+    protected $loader;
     /**
-     * @var Manager
+     * @var array
      */
-    protected $manager;
-    /**
-     * @var array of Item
-     */
-    protected $items;
+    protected $items = [];
 
-    public function __construct(Manager $config)
+    public function __construct(Loader $config)
     {
-        $this->manager = $config;
+        $this->loader = $config;
     }
 
     /**
@@ -32,7 +27,7 @@ class Collection
      * @param callable|null $writer
      * @return Item
      */
-    protected function item(string $name, $default = null, callable $reader = null, callable $writer = null)
+    protected function make(string $name, $default = null, callable $reader = null, callable $writer = null)
     {
         if(!isset($this->items[$name])) $this->items[$name] = new Item($this, $name, $default, $reader, $writer);
         return $this->items[$name];
@@ -42,94 +37,78 @@ class Collection
      * @param string $name
      * @return Item
      */
-    protected function getItem($name)
+    protected function item($name): Item
     {
         try{
             return $this->items[$name] ?? $this->$name();
         }catch (\Error $e){
-            throw new \InvalidArgumentException("Undefined configuration item '$name' in section " . static::VARIABLE);
+            throw new ItemNotFoundException($name, $this);
         }
     }
 
-    public function raw(string $name)
+    public function items()
     {
-        return $this->manager->getRaw(static::VARIABLE, $name);
+        try{
+            $reflection = new \ReflectionClass($this);
+            return array_filter(array_map(function(\ReflectionMethod $method){
+                if($method->class !== self::class){
+                    return ($item = $method->invoke($this)) instanceof Item ? $item : null;
+                }else{
+                    return null;
+                }
+            }, $reflection->getMethods(\ReflectionMethod::IS_PUBLIC)));
+        }catch (\Exception $e){
+            return [];
+        }
     }
 
-    public function value(string $name)
+    public function raw(string $item)
     {
-        return $this->manager->get(static::VARIABLE, $name);
+        return $this->loader->raw(static::class, $item);
     }
 
-    /**
-     * Read the persistent format of configuration and convert to runtime value.
-     * @param string $id
-     * @param mixed $raw
-     *
-     * @return mixed
-     */
-    public function read(string $id, $raw)
+    public function value(string $item)
     {
-        return $this->getItem($id)->read($raw);
-    }
-
-    /**
-     * Write the runtime value to persistent format
-     * @param string $id
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    public function write(string $id, $value)
-    {
-        return $this->getItem($id)->write($value, $this->manager->get(static::VARIABLE, $id));
+        if($this->loader->loaded(static::class, $item)) return $this->loader->fetch(static::class, $item);
+        $this->loader->store(static::class, $item, $value = $this->item($item)->read($this->raw($item)));
+        return $value;
     }
 
     /**
      * Receive standardized configuration variables (already runtime value) and pass to configuration pool
      * @param array $data
      *
-     * @return Manager
+     * @return Loader
      */
-    public function updateRuntime(array $data)
+    public function update(array $data)
     {
-        foreach ($data as $name => $value) $this->manager->set(static::VARIABLE, $name, $value);
-        return $this->manager;
+        return $this->loader->replace(static::class, $data);
     }
 
     /**
-     * Receive raw configuration variables and pass to configuration pool
-     * @param array $data
-     *
-     * @return Manager
+     * @return array
      */
-    public function updateRaw(array $data)
+    public function all(): array
     {
-        $this->processRaw($data);
-        foreach ($data as $name => $value) $data[$name] = $this->read($name, $value);
-        return $this->updateRuntime($data);
+        $items = $this->items();
+        return array_combine(array_map(function(Item $item){
+            return $item->name();
+        }, $items), array_map(function(Item $item){
+            return $item->value();
+        }, $items));
     }
 
     /**
-     * For override
-     * @param $data
+     * @return array
      */
-    protected function processRaw(&$data) {}
-
-    /**
-     * Return the string representation of this collection of configuration variables
-     * It will parse all if not parsed/set before and then convert runtime value to persistent format.
-     * Finally it return the string by var_export for saving as a PHP script.
-     *
-     * @return string
-     */
-    public function export()
+    public function dump(): array
     {
-        $parsed = $this->manager->getParsed(static::VARIABLE);
-        $keys = array_keys($parsed);
-        return var_export(array_combine($keys, array_map(function($name, $value){
-                return $this->write($name, $value);
-            }, $keys, array_values($parsed))) + $this->manager->getRaw(static::VARIABLE), true);
+        $items = $this->items();
+        return array_combine(array_map(function(Item $item){
+            return $item->name();
+        }, $items), array_map(function(Item $item){
+            return $item->writeCurrent();
+        }, $items));
     }
 
 }

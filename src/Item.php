@@ -19,11 +19,11 @@ class Item
      */
     protected $value;
     /**
-     * @var callable|null function($rawValue, $safeValue, Config $context)
+     * @var callable|null function($rawValue, $defaultValue)
      */
     protected $reader;
     /**
-     * @var callable|null function($newValue, $oldValue, Config $context)
+     * @var callable|null function($newValue, $oldValue)
      */
     protected $writer;
     /**
@@ -90,6 +90,17 @@ class Item
     public function write($currValue, $oldValue)
     {
         return isset($this->writer) ? call_user_func($this->writer, $currValue, $oldValue) : $currValue;
+    }
+
+    public function writeCurrent()
+    {
+        $value = $this->value();
+        return $this->write($value, $value);
+    }
+
+    public function __invoke()
+    {
+        return $this->value();
     }
 
     function __toString()

@@ -4,8 +4,9 @@
 namespace ACGrid\Config;
 
 
-interface ConfigurableUI
+interface Configurable
 {
+
     /**
      * Render the setup HTML
      * @return array

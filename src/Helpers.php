@@ -6,29 +6,27 @@ namespace ACGrid\Config;
 
 class Helpers
 {
-    public static function fixedArrayOf(array $types = [])
+    public static function typedHash(array $types = [])
     {
         return function ($value, array $default) use ($types) {
             $tmp = [];
-            foreach($types as $key => $writer) {
-                if(isset($writer)) {
-                    if(!is_callable($writer)) throw new \InvalidArgumentException;
-                    $tmp[$key] = call_user_func($writer, $value[$key], $default[$key]);
+            foreach($types as $key => $type) {
+                if(is_callable($type)) {
+                    $tmp[$key] = call_user_func($type, $value[$key], $default[$key] ?? null);
                 }else{
-                    $tmp[$key] = $value[$key] ?? $default[$key];
+                    $tmp[$key] = $value[$key] ?? ($default[$key] ?? null);
                 }
             }
             return $tmp;
         };
     }
 
-    public static function resizableArrayOf(callable $fixedType)
+    public static function typedArray(callable $fixedType)
     {
         return function ($value, array $default) use ($fixedType) {
             $tmp = [];
-            if(!isset($default[0])) throw new \InvalidArgumentException;
             foreach($value as $key => $val) {
-                $tmp[$key] = call_user_func($fixedType, $val, $default[0]);
+                $tmp[$key] = call_user_func($fixedType, $val, $default[$key] ?? null);
             }
             return $tmp;
         };
@@ -112,20 +110,6 @@ class Helpers
         return $writer ?? ($writer = function ($newValue){
                 return is_array($newValue) ? implode(',', $newValue) : $newValue;
             });
-    }
-
-    public static function setCheckboxBoolean(&$data, Item $item)
-    {
-        $name = $item->name();
-        $data[$name] = isset($data[$name]) && $data[$name];
-    }
-
-    public static function setLinearArray(&$data, Item $item, string $effectiveField)
-    {
-        $name = $item->name();
-        if(isset($data[$name]) && is_array($data[$name])) $data[$name] = array_values(array_filter($data[$name], function($item) use ($effectiveField){
-            return !empty($item[$effectiveField]);
-        }));
     }
 
 }

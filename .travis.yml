@@ -1,0 +1,16 @@
+language: php
+
+php:
+  - 7.2
+
+before_script:
+  - composer install --prefer-source --no-interaction
+
+after_script:
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover ./build/logs/clover.xml
+
+script: vendor/bin/phpunit tests/ --coverage-text --coverage-clover ./build/logs/clover.xml
+
+matrix:
+  fast_finish: true

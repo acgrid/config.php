@@ -10,20 +10,19 @@
     ],
     "type": "library",
     "require": {
-        "php": "^7.2",
-        "php-di/php-di": "^6"
+        "php": "^7.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.3"
     },
     "autoload": {
         "psr-4": {
-            "ACGrid\\Config": "src/"
+            "ACGrid\\Config\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "acgrid\\ConfigTest\\": "tests/"
+            "ACGridTest\\": "tests/"
         }
     },
     "suggest": {
